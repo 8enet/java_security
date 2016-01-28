@@ -1,42 +1,33 @@
 package com.javademo.security;
 
 
-import org.apache.commons.codec.binary.Hex;
+import com.github.kevinsawicki.http.*;
+import org.apache.commons.codec.binary.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DERNull;
 import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
-import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
-import org.bouncycastle.cert.X509ExtensionUtils;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.x509.X509V3CertificateGenerator;
-import org.bouncycastle.x509.extension.X509ExtensionUtil;
-import sun.security.x509.X509CertImpl;
 
 import javax.crypto.*;
-import javax.crypto.spec.DESKeySpec;
-import javax.crypto.spec.SecretKeySpec;
-import javax.security.auth.x500.X500Principal;
+import javax.crypto.spec.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
+import java.nio.*;
+import java.nio.channels.*;
 import java.security.*;
 import java.security.cert.*;
 import java.security.cert.Certificate;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Random;
+import java.security.spec.*;
+import java.util.*;
 
 public class Main {
 
@@ -47,25 +38,32 @@ public class Main {
     public static final String TEST_FILE="/Users/zl/develop/ic_launcher.png";
 
     public static void main(String[] args)throws Exception {
-        getSecurityInfo();
-
-        messageDigestTest();
-
-        digestStream();
-
-        keypair_test();
-
-        keyspec_test();
-
-        keyStore_test();
-
-        mac_test();
-
-        cipher_test();
+//        getSecurityInfo();
+//
+//        messageDigestTest();
+//
+//        digestStream();
+//
+//        keypair_test();
+//
+//        keyspec_test();
+//
+//        keyStore_test();
+//
+//        mac_test();
+//
+//        cipher_test();
 
         //generatexX509Cert_test();
 
-        certificate_test();
+        //certificate_test();
+
+//        String s="cyVcx4yfciV6bJFvNnqOXgNvUSuaicIzbyDLzT0R+eV7PA+w82mDRmVF6bIt +ukCUBvszxuciK4aNg4jfz7mekBG+2Vrpue5Ho/US6Vv1B+k6AvQvY2WlaWm BByVAco+2ompIunlR5gNe35qHaEgMqmMw6hIf9YZBWhwpPGQBvirwDDMq3T8 QSo2MHjRY0jdnQEz5Xv2q5VQpMV7f/kjGnvk74W2LKkSJ05EJEkNgoBv4hUB uVcK6n9gdi/lX7Qxeaxy6496gYuoGk8DyCWRxG7OJerUDtz50h+E3KMWRLCC 6jaDv4CmTAcYFu7aklcFPzdVSdyUEME46fTpNUefHIzf6lnOR+6HDgY/WQNB WSA+tfqSUqR0gzMHe+H/vb6pDXvjeznGAs6oU3M9hJ4T7okiK+tWsoMge/MN 2NQiLtSTYro8W3DGDono/VZsC/qfApcT9diDz4lY7dE1a3JAepgI4NQH7E4f RuwMdq1lqjR29Ceb30ZbcCnZqTgzWbYjfn7/ib/SPqviN04jAHNi+eEA6did xnxEqmibnAfpeXb8uYNxCmeAEvlE2xI/NRE1xTfprspYeZsWWApp63dh0A==";
+//        System.out.println(decryptDES(s));
+       // aaaa();
+       // aabb();
+
+        aaabbb();
     }
 
     private static void getSecurityInfo(){
@@ -350,5 +348,480 @@ public class Main {
         }
     }
 
+
+    private static String decryptDES(String decryptString) throws Exception {
+
+        byte[] v0 =Base64.decodeBase64(decryptString);
+        IvParameterSpec v4 = new IvParameterSpec(new byte[]{1, 2, 3, 4, 5, 6, 7, 8});
+        SecretKeySpec v3 = new SecretKeySpec("MARKETCC".getBytes(), "DES");
+        Cipher v1 = Cipher.getInstance("DES/CBC/PKCS5Padding");
+        v1.init(2, ((Key)v3), ((AlgorithmParameterSpec)v4));
+        return new String(v1.doFinal(v0), "utf-8");
+    }
+
+
+    private static void aaaa(){
+
+        if(true){
+            try {
+                aa3();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
+
+
+        //BufferedOutputStream bos=new BufferedOutputStream(null);
+        //bos.write();
+
+
+        try {
+            InputStream is=new FileInputStream("/Users/zl/com.fanshi.tvbrowser.6944f4b8192709886e0d07fc50969d98.shafa");
+
+            File outFile= new File("src/main/resources/copy.data");
+
+            //FileOutputStream fos=new FileOutputStream(outFile);
+
+
+            RandomAccessFile raf=new RandomAccessFile(outFile,"rw");
+            raf.seek(raf.length());
+
+
+            byte[] data=new byte[1024*10];
+
+            int len=-1;
+
+            ByteBuffer buffer = ByteBuffer.allocate(data.length*100);
+
+            //FileChannel fileChannel = fos.getChannel();
+
+
+            while ((len = is.read(data,0,data.length)) != -1){
+
+//                if(buffer.position()+len >= buffer.capacity()){
+//                    System.out.println("write ");
+//                    buffer.flip();
+//                    fileChannel.write(buffer);
+//                    buffer.clear();
+//                }
+//
+//                buffer.put(data,0,len);
+//
+//                System.out.println("put "+len);
+
+
+                raf.write(data,0,len);
+
+            }
+
+
+
+//            System.out.println(buffer.position());
+//
+//            if(buffer.position() > 0){
+//                buffer.flip();
+//                fileChannel.write(buffer);
+//            }
+//
+//            buffer.clear();
+//
+//
+//
+//            fileChannel.force(true);
+//
+//            fos.flush();
+//            fos.getFD().sync();
+
+            IOUtils.closeQuietly(is);
+//            IOUtils.closeQuietly(fileChannel);
+//            IOUtils.closeQuietly(fos);
+
+            IOUtils.closeQuietly(raf);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+    private static void aa2() throws Exception {
+
+
+
+
+
+        final HttpRequest request = HttpRequest.get("http://apps.sfcdn.org/apk/com.fanshi.tvbrowser.6944f4b8192709886e0d07fc50969d98.shafa");
+
+
+        int count = 2958466;
+        int pos = 2058466;
+
+        boolean seek=false;
+
+
+        //md5 6944f4b8192709886e0d07fc50969d98
+
+        File outFile= new File("src/main/resources/copy2.data");
+        if(outFile.exists() && outFile.length()<count){
+
+            request.header("Range", "bytes=" + (pos+1) + "-");
+            System.out.println("range "+pos);
+
+            seek=true;
+
+            //outFile.delete();
+        }else {
+            request.header("Range", "bytes=0-"+pos);
+
+            seek=false;
+        }
+
+        seek=true;
+
+
+//        if(f.exists()){
+//            f.delete();
+//        }
+
+        long st=System.currentTimeMillis();
+
+
+        try (
+                InputStream stream = request.stream();
+                FileOutputStream fos = new FileOutputStream(outFile,true);
+                FileInputStream fis=new FileInputStream(outFile);
+                FileChannel fisChannel=fis.getChannel();
+                FileChannel fosChannel = fos.getChannel()
+        ) {
+
+            long contentLength=request.contentLength();
+
+            System.out.println(" content length "+contentLength);
+
+
+            byte[] buff = new byte[1024 * 100];
+            int len = -1;
+
+
+            ByteBuffer buffer = ByteBuffer.allocate(buff.length);
+
+            if(seek){
+                System.out.println("seek "+pos);
+                //fosChannel.position(pos);
+
+                fisChannel.position(count);
+
+                ByteBuffer allocate = ByteBuffer.allocate(8);
+                fisChannel.read(allocate);
+
+                System.out.println("get Long "+allocate.getLong(0));
+
+                //fosChannel.position(pos);
+
+            }else {
+
+                System.out.println("fosChannel  position "+fosChannel.position());
+
+                ByteBuffer allocate = ByteBuffer.allocate(8);
+                fosChannel.position(count);
+
+                System.out.println("fosChannel  position "+fosChannel.position());
+
+                allocate.putLong(0,count);
+                fosChannel.write(allocate,count);
+
+                fosChannel.position(0);
+
+                System.out.println("seek "+seek);
+            }
+
+
+            fosChannel.position(0);
+
+            System.out.println("fosChannel  position "+fosChannel.position());
+
+
+
+
+
+//            while ((len = stream.read(buff)) != -1) {
+//
+//                if (buffer.position() + len >= buffer.capacity()) {
+//                    buffer.flip();
+//                    fosChannel.write(buffer);
+//                    buffer.clear();
+//                }
+//
+//                buffer.put(buff, 0, len);
+//
+//            }
+//
+//            if (buffer.position() > 0) {
+//                buffer.flip();
+//                fosChannel.write(buffer);
+//            }
+//
+//            buffer.clear();
+//            fosChannel.force(true);
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+        }
+
+    }
+
+
+    private static void aa3(){
+
+        final HttpRequest request = HttpRequest.get("http://apps.sfcdn.org/apk/com.fanshi.tvbrowser.6944f4b8192709886e0d07fc50969d98.shafa");
+
+
+        int count = 2958466;
+        int pos = 2058466;
+
+        boolean seek=false;
+        int cp=0;
+
+
+        //md5 6944f4b8192709886e0d07fc50969d98
+
+        File outFile= new File("src/main/resources/copy2.data");
+        if(outFile.exists() && outFile.length()<count){
+
+            request.header("Range", "bytes=" + (pos+1) + "-");
+            System.out.println("range "+pos);
+
+            seek=true;
+
+            cp=pos;
+
+            //outFile.delete();
+        }else {
+            request.header("Range", "bytes=0-"+pos);
+
+            seek=false;
+            cp=0;
+        }
+
+
+//        if(f.exists()){
+//            f.delete();
+//        }
+
+        long st=System.currentTimeMillis();
+
+
+        try (
+                InputStream stream = request.stream();
+                FileOutputStream fos = new FileOutputStream(outFile,true);
+                FileChannel fosChannel = fos.getChannel();
+                ReadableByteChannel readableByteChannel = Channels.newChannel(stream);
+        ) {
+
+            long contentLength=request.contentLength();
+
+            System.out.println(" content length "+contentLength);
+
+
+            fosChannel.transferFrom(readableByteChannel,outFile.length(),contentLength);
+
+
+            fosChannel.force(true);
+
+//            while ((len = stream.read(buff)) != -1) {
+//
+//                if (buffer.position() + len >= buffer.capacity()) {
+//                    buffer.flip();
+//                    fosChannel.write(buffer);
+//                    buffer.clear();
+//                }
+//
+//                buffer.put(buff, 0, len);
+//
+//            }
+//
+//            if (buffer.position() > 0) {
+//                buffer.flip();
+//                fosChannel.write(buffer);
+//            }
+//
+//            buffer.clear();
+//            fosChannel.force(true);
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+        }
+    }
+
+
+
+    private static void aaa4(){
+
+        File file=new File("src/main/resources/copy2.data");
+
+//        if(file.exists()){
+//            file.delete();
+//        }
+
+        try(
+                FileOutputStream fos=new FileOutputStream(file,true);
+                FileChannel channel= fos.getChannel();
+        ){
+
+            int size=10240;
+            ByteBuffer buff=ByteBuffer.allocate(1024);
+            //channel.write(buff,size+buff.capacity());
+
+
+            buff.putLong(0,Long.MAX_VALUE);
+            buff.flip();
+            final int write = channel.write(buff, 29);
+
+            System.out.println("write "+write);
+
+            channel.force(true);
+
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
+
+
+    private static void aabb(){
+        String str="abcde1234567890";
+
+        byte[] data=str.getBytes();
+        int len=data.length;
+
+        byte[] buff=new byte[3];
+        int pos=0;
+
+
+        ByteBuffer byteBuffer=ByteBuffer.allocate(5);
+
+        while (pos != len){
+            int c=Math.min(buff.length,len-pos);
+            System.arraycopy(data,pos,buff,0,c);
+
+
+
+            if(byteBuffer.position()+c >= byteBuffer.capacity()){
+                System.out.println(new String(byteBuffer.array()));
+
+                byteBuffer.clear();
+            }
+
+            byteBuffer.put(buff,0,c);
+
+            pos+=c;
+        }
+
+    }
+
+    private static void aaabbb(){
+        int count=3;
+        float[] start={0,7};
+        float[] end={9,15};
+
+        final float[] floats = splitLine(start, end, 0.3333f);
+        System.out.println(Arrays.toString(floats));
+
+        getLineXYData(-10d,-7d,9d,15d);
+
+
+        double[] start1={-10,-7};
+        double[] end1={9,15};
+        getLineXYData(start1,end1,3);
+
+
+
+
+
+    }
+
+    private static float[] splitLine(float[] start,float[] end,float scale){
+        return new float[]{(start[0]+end[0]*scale)/(scale+1),(start[1]+end[1]*scale)/(scale+1)};
+    }
+
+    /**
+     *
+     * @param start [x1,y1]
+     * @param end   [x2,y2]
+     * @param n     n段,n>1
+     */
+    private static void getLineXYData(double[] start, double[] end, int n){
+        double[] tmp = new double[2];
+        for (int i = 1; i < n; i++) {
+            tmp[0] = end[0] - start[0];
+            tmp[1] = end[1] - start[1];
+            double k = i / (double) n;
+            double[] floats = new double[]{start[0] + tmp[0] * k, start[1] + tmp[1] * k};
+            System.out.println(i + "   " + Arrays.toString(floats));
+        }
+    }
+
+
+    public static float[] devideLine2(
+            float[] start, //线段起点坐标
+            float[] end, //线段终点坐标
+            int n, //线段分的份数
+            int i //求第i份在线段上的坐标（i为0和n时分别代表起点和终点坐标）
+    )
+    {
+        if(n==0){//如果n为零，返回起点坐标
+            return start;
+        }
+        //求起点到终点的向量
+        float[] ab=new float[]{end[0]-start[0], end[1]-start[1], end[2]-start[2]};
+        //求向量比例
+        float vecRatio=i/(float)n;
+        //求起点到所求点的向量
+        float[] ac=new float[]{ab[0]*vecRatio, ab[1]*vecRatio, ab[2]*vecRatio};
+        //所求坐标
+        float x=start[0]+ac[0];
+        float y=start[1]+ac[1];
+        float z=start[2]+ac[2];
+        //返回线段的n等分点坐标
+        return new float[]{x, y, z};
+    }
+
+
+    private static ArrayList<Map<String, Double>> getLineXYData(Double Ax, Double Ay, Double Bx, Double By){
+        ArrayList<Map<String, Double>> list = new ArrayList<>();
+        int point_number = 2;
+        Boolean pdnumber = true;
+        for(int i=0;i<point_number;i++){
+            Map<String, Double> map = new HashMap<>();
+            Double x ;
+            Double y ;
+            if(pdnumber){
+                y= (2*Ax+Bx)/3;
+                x = (2*Ay+By)/3;
+                pdnumber = false;
+            }else{
+                y = (Ax+2*Bx)/3;
+                x = (Ay+2*By)/3;
+            }
+
+            map.put("x", x);
+            map.put("y", y);
+            list.add(map);
+        }
+
+        for(int t=0;t<list.size();t++){
+            System.out.println("该三等分点为：C"+t+"("+list.get(t).get("x")+","+list.get(t).get("y")+")");
+        }
+        return list;
+    }
 
 }
