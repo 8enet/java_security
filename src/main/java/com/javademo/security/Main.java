@@ -3,6 +3,7 @@ package com.javademo.security;
 
 import com.github.kevinsawicki.http.*;
 import org.apache.commons.codec.binary.*;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.ASN1InputStream;
@@ -351,7 +352,7 @@ public class Main {
 
     private static String decryptDES(String decryptString) throws Exception {
 
-        byte[] v0 =Base64.decodeBase64(decryptString);
+        byte[] v0 = Base64.decodeBase64(decryptString);
         IvParameterSpec v4 = new IvParameterSpec(new byte[]{1, 2, 3, 4, 5, 6, 7, 8});
         SecretKeySpec v3 = new SecretKeySpec("MARKETCC".getBytes(), "DES");
         Cipher v1 = Cipher.getInstance("DES/CBC/PKCS5Padding");
