@@ -76,13 +76,7 @@ public class MySocketServer {
 
     public static byte[] encodeData(byte[] msgData) {
         int len = msgData.length;
-
-        byte[] data = new byte[len + 4];
-        System.arraycopy(Utils.intToByteArray(len), 0, data, 0, 4);
-        System.arraycopy(msgData, 0, data, 4, len);
-
-        //System.out.println("len "+byteArrayToInt(Arrays.copyOfRange(data,0,4))+"    msg "+new String(Arrays.copyOfRange(data,4,data.length)));
-        return data;
+        return Utils.mergeArray(Utils.intToByteArray(len),msgData);
     }
 
 
