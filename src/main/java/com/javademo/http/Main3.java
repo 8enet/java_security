@@ -1,9 +1,6 @@
 package com.javademo.http;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
@@ -224,6 +221,9 @@ public class Main3 {
         private ByteBuffer mWriteBuff;
         private int mWriteRemaing=-1;
 
+        private int mask = 0x000;
+        private StringBuffer sb=new StringBuffer();
+
         private boolean headerReadEnd=false;
         private boolean readingBody=false;
 
@@ -258,7 +258,11 @@ public class Main3 {
 
 
                 if(mReadBuff.hasRemaining()){
-                    //不知道用nio怎么出来gzip/chunck 流了 T_T
+                    //不知道用nio怎么读出gzip/chunck 流了 T_T
+                    //难道用ByteArrayOutputStream全部写进去?但是也不知道流有多长..
+
+                    System.out.println("body ...");
+
                 }
 
             }catch (Throwable e){
@@ -269,8 +273,6 @@ public class Main3 {
 
         private void readHeader(ByteBuffer buffer){
 
-            StringBuilder sb=new StringBuilder();
-            int mask= 0x000;
             char c1;
             while (buffer.hasRemaining()) {
                 c1 = (char) (buffer.get() & 0xff);
