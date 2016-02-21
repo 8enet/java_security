@@ -25,6 +25,8 @@ public class Main3 {
     static final int LN_LF =0x002; //标记\n开始
     static final int END_CR_ST =0x004; //标记最后一行\r开始
 
+    static final int BUFF_SIZE=4096;
+
     public static void main(String[] args){
         ioHttp();
     }
@@ -127,17 +129,35 @@ public class Main3 {
                 System.out.println("using gzip ");
                 inputStream=new GZIPInputStream(inputStream);
             }
+            String contentLengthValue= headers.get("Content-Length");
+            int contentLength=-1;
+            if(contentLengthValue != null){
+                try{
+                    contentLength=Integer.parseInt(contentLengthValue);
+                }catch (NumberFormatException e){
+                    e.printStackTrace();
+                }
+            }
 
             System.out.println("http body \n");
 
             BufferedReader bufferedReader=new BufferedReader(new InputStreamReader(inputStream));
 
-            char[] buff=new char[4096];
+            int buffSize= (contentLength> 0 && contentLength<BUFF_SIZE)?contentLength:BUFF_SIZE;
+
+            char[] buff=new char[buffSize];
             int len=-1;
+
+            int readerLen=0;
 
             //这里也没有处理
             while ( (len=bufferedReader.read(buff)) != -1){
+                readerLen+=len;
                 sb.append(buff,0,len);
+
+                if(readerLen == contentLength){
+                    break;
+                }
             }
 
             System.out.println(sb);
