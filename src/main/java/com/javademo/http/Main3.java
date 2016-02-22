@@ -1,9 +1,10 @@
 package com.javademo.http;
 
+
+import javax.net.*;
+import javax.net.ssl.*;
 import java.io.*;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.Socket;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -39,10 +40,7 @@ public class Main3 {
 //            System.setProperty("socksProxyHost","127.0.0.1");
 //            System.setProperty("socksProxyPort","8889");
 //
-
-            String host="www.oschina.net";
-            HttpRequest request=new HttpRequest(host,80);
-            request.get();
+            HttpRequest request=new HttpRequest(new URL("https://github.com/8enet")).get();
             request.addHeader("User-Agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36");
             request.addHeader("Accept-Encoding","gzip, deflate, sdch");
             //request.addHeader("Connection","close");
@@ -51,8 +49,13 @@ public class Main3 {
 
             Proxy proxy=new Proxy(Proxy.Type.SOCKS,new InetSocketAddress("127.0.0.1",8889));
 
-            Socket socket=new Socket(); //可以设置socks代理
+            //Socket socket=new Socket(); //可以设置socks代理
+
+            SocketFactory socketFactory=request.getPort() == 443 ? SSLSocketFactory.getDefault() : SocketFactory.getDefault();
+
+            Socket socket=socketFactory.createSocket();
             socket.connect(new InetSocketAddress(request.getHost(),request.getPort()));
+
 
             socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
 
@@ -139,7 +142,7 @@ public class Main3 {
                 }
             }
 
-            System.out.println("http body \n");
+
 
             BufferedReader bufferedReader=new BufferedReader(new InputStreamReader(inputStream));
 
@@ -149,6 +152,8 @@ public class Main3 {
             int len=-1;
 
             int readerLen=0;
+
+            System.out.println("http body \n"+buffSize);
 
             //这里也没有处理
             while ( (len=bufferedReader.read(buff)) != -1){
@@ -172,7 +177,7 @@ public class Main3 {
     private static void nioHttp() throws IOException {
 
         String host="www.csdn.net";
-        HttpRequest request=new HttpRequest(host,80);
+        HttpRequest request=new HttpRequest(new URL("http://www.csdn.net"));
         request.get();
         request.addHeader("User-Agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36");
         request.addHeader("Accept-Encoding","gzip, deflate, sdch");
@@ -352,43 +357,46 @@ public class Main3 {
 
     static class HttpRequest{
         static final String LINE="\r\n";
-        private String host;
-        private int port;
         private String method;
-        private String pathSegment;
         private Map<String,String> headers;
+        private URL url;
 
-        public HttpRequest(String host, int port) {
-            this.host = host;
-            this.port = port;
+        public HttpRequest(URL url) {
+            this.url=url;
+            String protocol= url.getProtocol();
+            if("http".equals(protocol) || "https".equals(protocol)){
+
+            }else {
+                throw new RuntimeException("Unsupport "+protocol+"  protocol ! ");
+            }
         }
 
         public String getPathSegment() {
-            return pathSegment!=null?pathSegment:"/";
+            return "".equals(url.getPath())?"/":url.getPath();
         }
 
-        public void setPathSegment(String pathSegment) {
-            this.pathSegment = pathSegment;
-        }
 
         public String getMethod() {
             return method;
         }
 
-        public void get(){
+        public HttpRequest get(){
             this.method="GET";
+            return this;
         }
 
-        public void post(){
+        public HttpRequest post(){
             this.method="POST";
+            return this;
         }
 
         public String getHost() {
-            return host;
+            return url.getAuthority();
         }
 
         public int getPort() {
-            return port;
+            int port= url.getPort();
+            return port==-1?url.getDefaultPort():port;
         }
 
         public Map<String, String> getHeaders() {
@@ -409,7 +417,7 @@ public class Main3 {
 
             if(headers != null && !headers.isEmpty()){
                 if(!headers.containsKey("Host")){
-                    headers.put("Host",host);
+                    headers.put("Host",url.getAuthority());
                 }
                 Set<Map.Entry<String, String>> entries = headers.entrySet();
                 for (Map.Entry<String, String> entry:entries){
