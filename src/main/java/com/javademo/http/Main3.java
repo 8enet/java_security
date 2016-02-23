@@ -10,10 +10,8 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -22,17 +20,42 @@ import java.util.zip.GZIPInputStream;
 public class Main3 {
     public static final String REQUEST_LINE = "REQUEST_LINE";
 
+
     static final int LN_CR =0x001; //标记\r开始
     static final int LN_LF =0x002; //标记\n开始
     static final int END_CR_ST =0x004; //标记最后一行\r开始
 
     static final int BUFF_SIZE=4096;
 
-    public static void main(String[] args){
-        ioHttp();
+    static final ExecutorService sExecutor = Executors.newCachedThreadPool();
+
+    public static void main(String[] args) throws Exception {
+        httpClient();
+        //ioHttp();
     }
 
+    private static void httpClient() throws Exception {
+        final HttpClient client=new HttpClient();
 
+
+        HttpRequest request=new HttpRequest(new URL("http://127.0.0.1:8080/post"));
+        request.addHeader("User-Agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36");
+        request.addHeader("Accept-Encoding","gzip, deflate, sdch");
+        request.addHeader("Connection","close");
+
+        request.post(new HashMap<String, String>(){{
+            put("data","dd dfdf");
+            put("id","osid 09ew$$#&&?");
+        }});
+
+
+        HttpResponse response = client.request(request);
+
+
+        System.out.println(response.body());
+
+
+    }
 
     private static void ioHttp(){
         try {
@@ -45,11 +68,12 @@ public class Main3 {
             request.addHeader("Accept-Encoding","gzip, deflate, sdch");
             //request.addHeader("Connection","close");
 
-            String req=request.getRequest();
 
             Proxy proxy=new Proxy(Proxy.Type.SOCKS,new InetSocketAddress("127.0.0.1",8889));
 
             //Socket socket=new Socket(); //可以设置socks代理
+
+
 
             SocketFactory socketFactory=request.getPort() == 443 ? SSLSocketFactory.getDefault() : SocketFactory.getDefault();
 
@@ -57,7 +81,7 @@ public class Main3 {
             socket.connect(new InetSocketAddress(request.getHost(),request.getPort()));
 
 
-            socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
+            socket.getOutputStream().write(request.asByte());
 
             InputStream inputStream = socket.getInputStream();
 
@@ -67,6 +91,8 @@ public class Main3 {
 
             int mark= 0x000;
             char c;
+
+            List<HttpCookie> cookies=new ArrayList<>();
 
             while (true) {
                 c = (char) (inputStream.read() & 0xFF);
@@ -88,7 +114,13 @@ public class Main3 {
                     }else {
                         int i = line.indexOf(":");
                         if(i != -1){
-                            headers.put(line.substring(0,i),line.substring(i+1,line.length()).trim());
+                            String key=line.substring(0,i);
+                            if("Set-Cookie".equals(key)){
+                                cookies.addAll(HttpCookie.parse(line.substring(i+1,line.length()).trim()));
+                            }else {
+                                headers.put(key,line.substring(i+1,line.length()).trim());
+                            }
+
                         }else {
                             headers.put(line,line);
                         }
@@ -117,6 +149,10 @@ public class Main3 {
 
             }
 
+            System.out.flush();
+
+            System.err.println(" ----cookie----  ");
+            System.out.println(cookies.get(0).isHttpOnly());
 
             boolean usingGzip="gzip".equals(headers.get("Content-Encoding"));
             boolean chunked="chunked".equals(headers.get("Transfer-Encoding"));
@@ -192,7 +228,7 @@ public class Main3 {
         System.out.println(socketChannel);
 
         HttpHandle httpHandle=new HttpHandle();
-        httpHandle.mWriteBuff=ByteBuffer.wrap(request.getRequest().getBytes(StandardCharsets.UTF_8));
+        httpHandle.mWriteBuff=ByteBuffer.wrap(request.asByte());
 
         socketChannel.register(selector, SelectionKey.OP_CONNECT|SelectionKey.OP_READ|SelectionKey.OP_WRITE,httpHandle);
 
@@ -355,82 +391,5 @@ public class Main3 {
     }
 
 
-    static class HttpRequest{
-        static final String LINE="\r\n";
-        private String method;
-        private Map<String,String> headers;
-        private URL url;
-
-        public HttpRequest(URL url) {
-            this.url=url;
-            String protocol= url.getProtocol();
-            if("http".equals(protocol) || "https".equals(protocol)){
-
-            }else {
-                throw new RuntimeException("Unsupport "+protocol+"  protocol ! ");
-            }
-        }
-
-        public String getPathSegment() {
-            return "".equals(url.getPath())?"/":url.getPath();
-        }
-
-
-        public String getMethod() {
-            return method;
-        }
-
-        public HttpRequest get(){
-            this.method="GET";
-            return this;
-        }
-
-        public HttpRequest post(){
-            this.method="POST";
-            return this;
-        }
-
-        public String getHost() {
-            return url.getAuthority();
-        }
-
-        public int getPort() {
-            int port= url.getPort();
-            return port==-1?url.getDefaultPort():port;
-        }
-
-        public Map<String, String> getHeaders() {
-            return headers;
-        }
-
-        public void addHeader(String key,String value) {
-            if(headers == null){
-                headers=new HashMap<>();
-            }
-            headers.put(key,value);
-        }
-
-        String getRequest(){
-            StringBuilder sb=new StringBuilder(method);
-            sb.append(" ").append(getPathSegment()).append(" HTTP/1.1");
-            sb.append(LINE);
-
-            if(headers != null && !headers.isEmpty()){
-                if(!headers.containsKey("Host")){
-                    headers.put("Host",url.getAuthority());
-                }
-                Set<Map.Entry<String, String>> entries = headers.entrySet();
-                for (Map.Entry<String, String> entry:entries){
-                    sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(LINE);
-                }
-            }else {
-                sb.append(LINE);
-            }
-
-            sb.append(LINE);
-            return sb.toString();
-        }
-
-    }
 
 }
