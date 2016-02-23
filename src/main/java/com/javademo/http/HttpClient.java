@@ -1,5 +1,7 @@
 package com.javademo.http;
 
+import com.javademo.http.request.IRequest;
+
 import javax.net.*;
 import javax.net.ssl.*;
 import java.io.*;
@@ -10,13 +12,16 @@ import java.net.*;
  */
 public class HttpClient {
 
-    public HttpResponse request(HttpRequest request) throws IOException {
+    public HttpResponse request(IRequest request) throws IOException {
 
         SocketFactory socketFactory = request.getPort() == 443 ? SSLSocketFactory.getDefault() : SocketFactory.getDefault();
 
         Socket socket=socketFactory.createSocket();
         socket.connect(new InetSocketAddress(request.getHost(),request.getPort()));
-        socket.getOutputStream().write(request.asByte());
+
+        //socket.connect(new InetSocketAddress("127.0.0.1",8888));
+
+        request.writeTo(socket.getOutputStream());
 
         return new HttpResponse(socket,request.getResponseConfig());
     }

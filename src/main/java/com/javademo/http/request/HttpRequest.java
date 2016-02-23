@@ -1,5 +1,6 @@
-package com.javademo.http;
+package com.javademo.http.request;
 
+import com.javademo.http.HttpResponse;
 import com.javademo.socket.*;
 
 import java.io.*;
@@ -10,14 +11,13 @@ import java.util.*;
 /**
  * Created by zl on 16/2/22.
  */
-public class HttpRequest {
+public class HttpRequest implements IRequest{
 
     static final String LINE="\r\n";
-    private String method="GET";
-    private Map<String,String> headers;
+    protected String method="GET";
+    protected Map<String,String> headers;
     private byte[] postData=null;
-    private URL url;
-
+    protected URL url;
 
     private HttpResponse.ResponseConfig responseConfig;
 
@@ -124,7 +124,11 @@ public class HttpRequest {
         headers.put("Cookie",sb.toString());
     }
 
-    byte[] asByte(){
+    protected String getHeaderHost(){
+        return getHost()+":"+getPort();
+    }
+
+    public byte[] asByte(){
         byte[] bytes=null;
         byte[] head=getRequest().getBytes(StandardCharsets.UTF_8);
         if(postData != null){
@@ -142,7 +146,7 @@ public class HttpRequest {
 
         if(headers != null && !headers.isEmpty()){
             if(!headers.containsKey("Host")){
-                headers.put("Host",url.getHost());
+                headers.put("Host",getHeaderHost());
             }
             if("POST".equals(method) && postData != null){
                 headers.put("Content-Type","application/x-www-form-urlencoded");
@@ -170,5 +174,15 @@ public class HttpRequest {
 
     public void setResponseConfig(HttpResponse.ResponseConfig responseConfig) {
         this.responseConfig = responseConfig;
+    }
+
+    private boolean isPost(){
+        return "POST".equals(method);
+    }
+
+
+    @Override
+    public void writeTo(OutputStream outputStream) throws IOException {
+        outputStream.write(asByte());
     }
 }

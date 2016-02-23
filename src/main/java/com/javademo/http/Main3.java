@@ -1,6 +1,9 @@
 package com.javademo.http;
 
 
+import com.javademo.http.request.HttpRequest;
+import com.javademo.http.request.MultipartFileRequest;
+
 import javax.net.*;
 import javax.net.ssl.*;
 import java.io.*;
@@ -9,7 +12,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.zip.GZIPInputStream;
@@ -38,15 +40,21 @@ public class Main3 {
         final HttpClient client=new HttpClient();
 
 
-        HttpRequest request=new HttpRequest(new URL("http://127.0.0.1:8080/post"));
+        MultipartFileRequest request=new MultipartFileRequest(new URL("http://127.0.0.1:8080/post"));
         request.addHeader("User-Agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36");
         request.addHeader("Accept-Encoding","gzip, deflate, sdch");
         request.addHeader("Connection","close");
 
-        request.post(new HashMap<String, String>(){{
-            put("data","dd dfdf");
-            put("id","osid 09ew$$#&&?");
-        }});
+        request.addPart("data","dsf");
+        request.addPart("id","dsfsdfdsf");
+
+        request.addFile(new MultipartFileRequest.FilePart("file",new File("/Users/zl/develop/ic_launcher.png")));
+        request.addFile(new MultipartFileRequest.FilePart("file2",new File("/Users/zl/untitled.html")));
+
+//        request.post(new HashMap<String, String>(){{
+//            put("data","dd dfdf");
+//            put("id","osid 09ew$$#&&?");
+//        }});
 
 
         HttpResponse response = client.request(request);
