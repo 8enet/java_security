@@ -33,35 +33,28 @@ public class MultipartFileRequest extends HttpRequest{
 
     private static final String STR_CR_LF = "\r\n";
     private static final byte[] CR_LF = STR_CR_LF.getBytes();
-    private static final byte[] TRANSFER_ENCODING_BINARY =
-            ("Content-Transfer-Encoding: binary" + STR_CR_LF).getBytes();
 
     private final static char[] MULTIPART_CHARS =
             "-_1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
     private final String boundary;
-    private final byte[] boundaryLine;
-    private final byte[] boundaryEnd;
+
 
     private List<FilePart> fileParts;
     private Map<String,String> params;
 
 
-    private long contentLength=0;
-
     public MultipartFileRequest(URL url) {
         super(url);
 
 
-        final StringBuilder buf = new StringBuilder();
+        final StringBuilder buf = new StringBuilder("----------");
         final Random rand = new Random();
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < 20; i++) {
             buf.append(MULTIPART_CHARS[rand.nextInt(MULTIPART_CHARS.length)]);
         }
 
         boundary = buf.toString();
-        boundaryLine = ("--"+ boundary + STR_CR_LF).getBytes();
-        boundaryEnd = ("--"+boundary + "--" + STR_CR_LF).getBytes();
 
         method="POST";
     }
@@ -107,6 +100,8 @@ public class MultipartFileRequest extends HttpRequest{
         sb.append(" ").append(getPathSegment()).append(" HTTP/1.1");
         sb.append(LINE);
 
+        final byte[] boundaryEnd=("--"+boundary + "--" + STR_CR_LF).getBytes();
+
 
         //写入字符串参数
         StringBuilder paramsSb=new StringBuilder();
@@ -130,24 +125,29 @@ public class MultipartFileRequest extends HttpRequest{
                 fileSb.append("--").append(boundary).append(STR_CR_LF);
                 fileSb.append(createContentDisposition(filePart.name,filePart.file.getName()));
                 fileSb.append(createContentType(filePart.contentType));
+                fileSb.append("Content-Transfer-Encoding: binary").append(STR_CR_LF);
+                fileSb.append(STR_CR_LF);
+                //file
                 fileSb.append(STR_CR_LF);
                 fileLength+=filePart.file.length();
             }
         }
 
+        //总长度，post 表单参数+文件+结束行长度
         byte[] headerDataSize=fileSb.append(paramsSb).toString().getBytes(StandardCharsets.UTF_8);
 
-        contentLength=headerDataSize.length+fileLength+boundaryEnd.length;
+        int contentLength=headerDataSize.length+fileLength+boundaryEnd.length;
 
 
         if(headers != null && !headers.isEmpty()){
+            //根据http 1.1规范，必须加入Host
             if(!headers.containsKey("Host")){
                 headers.put("Host",getHeaderHost());
             }
 
             headers.put("Content-Type","multipart/form-data; boundary="+boundary);
-
             headers.put("Content-Length",""+contentLength);
+
             Set<Map.Entry<String, String>> entries = headers.entrySet();
             for (Map.Entry<String, String> entry:entries){
                 sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(STR_CR_LF);
@@ -161,20 +161,23 @@ public class MultipartFileRequest extends HttpRequest{
 
         System.out.println("header  \n"+sb);
 
+        //发送header
         outputStream.write(sb.toString().getBytes(StandardCharsets.UTF_8));
 
 
         System.out.println("params  \n"+paramsSb);
 
+        //发送表单参数
         outputStream.write(paramsSb.toString().getBytes(StandardCharsets.UTF_8));
 
         if(fileParts != null){
-
+            //发文件
             for (FilePart filePart: fileParts){
                 fileSb.setLength(0);
                 fileSb.append("--").append(boundary).append(STR_CR_LF);
                 fileSb.append(createContentDisposition(filePart.name,filePart.file.getName()));
                 fileSb.append(createContentType(filePart.contentType));
+                fileSb.append("Content-Transfer-Encoding: binary").append(STR_CR_LF);
                 fileSb.append(STR_CR_LF);
 
                 System.out.println("fileSb  \n "+fileSb);
@@ -188,6 +191,7 @@ public class MultipartFileRequest extends HttpRequest{
             outputStream.write(CR_LF);
         }
 
+        //最后边界
         outputStream.write(boundaryEnd);
 
     }

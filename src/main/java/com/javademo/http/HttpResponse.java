@@ -1,5 +1,7 @@
 package com.javademo.http;
 
+import com.sun.prism.shader.*;
+
 import java.io.*;
 import java.lang.ref.*;
 import java.net.*;
@@ -19,7 +21,8 @@ public class HttpResponse {
 
     static final int BUFF_SIZE=4096;
 
-    static final ResponseConfig DEFAULT_RESO_CONFIG=ResponseConfig.creat().readCookie(false);
+
+    private HttpClient.SocketKeeper socketKeeper;
 
     private Socket socket;
 
@@ -33,8 +36,13 @@ public class HttpResponse {
     private ResponseConfig responseConfig;
 
 
+    HttpResponse(HttpClient.SocketKeeper socketKeeper,ResponseConfig config) throws IOException {
+        this(socketKeeper.getSocket(),config);
+        this.socketKeeper=socketKeeper;
+    }
+
     HttpResponse(Socket socket,ResponseConfig config) throws IOException {
-        responseConfig=(config!=null?config:DEFAULT_RESO_CONFIG);
+        responseConfig=config;
 
         this.socket=socket;
         inputStream=this.socket.getInputStream();
@@ -172,9 +180,10 @@ public class HttpResponse {
             readerLen+=len;
             sb.append(buff,0,len);
 
-            if(readerLen == contentLength){
-                break;
-            }
+            //System.out.println(readerLen+"    "+len);
+//            if(readerLen == contentLength){
+//                break;
+//            }
         }
 
         String body=sb.toString();
@@ -209,22 +218,29 @@ public class HttpResponse {
 
 
     private void finsh(){
-        try {
-            if(inputStream != null){
-                inputStream.close();
+        if(!responseConfig.keepAlive) {
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            try {
+
+                if (socket != null) {
+                    socket.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
-        try {
 
-            if(socket != null){
-                socket.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        if(socketKeeper != null && responseConfig.keepAlive){
+            socketKeeper.onceOver();
         }
+
     }
 
 
@@ -233,6 +249,7 @@ public class HttpResponse {
         private boolean readCookie=false;
         private boolean autoUnGzip=true;
         private boolean onlyReadHeader=false;
+        private boolean keepAlive=true;
 
         ResponseConfig(){
 
@@ -254,6 +271,28 @@ public class HttpResponse {
         public ResponseConfig onlyReadHeader(boolean f){
             onlyReadHeader=f;
             return this;
+        }
+
+        public ResponseConfig keepAlive(boolean f){
+            this.keepAlive=f;
+            return this;
+        }
+
+
+        public boolean isReadCookie() {
+            return readCookie;
+        }
+
+        public boolean isAutoUnGzip() {
+            return autoUnGzip;
+        }
+
+        public boolean isOnlyReadHeader() {
+            return onlyReadHeader;
+        }
+
+        public boolean isKeepAlive() {
+            return keepAlive;
         }
     }
 }

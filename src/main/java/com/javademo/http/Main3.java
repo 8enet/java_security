@@ -32,6 +32,7 @@ public class Main3 {
     static final ExecutorService sExecutor = Executors.newCachedThreadPool();
 
     public static void main(String[] args) throws Exception {
+
         httpClient();
         //ioHttp();
     }
@@ -40,30 +41,61 @@ public class Main3 {
         final HttpClient client=new HttpClient();
 
 
-        MultipartFileRequest request=new MultipartFileRequest(new URL("http://127.0.0.1:8080/post"));
-        request.addHeader("User-Agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36");
-        request.addHeader("Accept-Encoding","gzip, deflate, sdch");
-        request.addHeader("Connection","close");
+//        MultipartFileRequest request=new MultipartFileRequest(new URL("http://127.0.0.1:8080/post"));
+//        request.addHeader("User-Agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36");
+//        request.addHeader("Accept-Encoding","gzip, deflate, sdch");
+//        //request.addHeader("Connection","close");
+//
+//        request.setProxy(new Proxy(Proxy.Type.SOCKS,new InetSocketAddress("127.0.0.1",8090)));
+//
+//        request.addPart("data","dsf");
+//        request.addPart("id","dsfsdfdsf");
+//
+//        request.addFile(new MultipartFileRequest.FilePart("file",new File("/Users/zl/apktool/adware_real.txt")));
+//        request.addFile(new MultipartFileRequest.FilePart("file2",new File("/Users/zl/apktool/adware.db")));
+//
+////        request.post(new HashMap<String, String>(){{
+////            put("data","dd dfdf");
+////            put("id","osid 09ew$$#&&?");
+////        }});
+//
+//
+//        HttpResponse response = client.request(request);
 
-        request.addPart("data","dsf");
-        request.addPart("id","dsfsdfdsf");
-
-        request.addFile(new MultipartFileRequest.FilePart("file",new File("/Users/zl/develop/ic_launcher.png")));
-        request.addFile(new MultipartFileRequest.FilePart("file2",new File("/Users/zl/untitled.html")));
-
-//        request.post(new HashMap<String, String>(){{
-//            put("data","dd dfdf");
-//            put("id","osid 09ew$$#&&?");
-//        }});
+        HttpRequest req=new HttpRequest(new URL("http://www.cnbeta.com/articles/477711.htm")).get();
+        req.addHeader("User-Agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36");
+        req.addHeader("Accept-Encoding","gzip, deflate, sdch");
+        HttpResponse response=client.request(req);
+        response.body();
 
 
-        HttpResponse response = client.request(request);
+
+        Runnable runnable=new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    HttpRequest req=new HttpRequest(new URL("http://www.cnbeta.com/articles/477711.htm")).get();
+                    req.addHeader("User-Agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36");
+                    req.addHeader("Accept-Encoding","gzip, deflate, sdch");
+                    HttpResponse response=client.request(req);
+                    response.body();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
 
 
-        System.out.println(response.body());
+        sExecutor.execute(runnable);
+
+        sExecutor.execute(runnable);
+        sExecutor.execute(runnable);
+        sExecutor.execute(runnable);
 
 
     }
+
+
 
     private static void ioHttp(){
         try {

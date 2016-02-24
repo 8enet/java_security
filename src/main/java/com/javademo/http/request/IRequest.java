@@ -16,5 +16,6 @@ public interface IRequest {
 
     HttpResponse.ResponseConfig getResponseConfig();
 
+
     void writeTo(OutputStream outputStream)throws IOException;
 }

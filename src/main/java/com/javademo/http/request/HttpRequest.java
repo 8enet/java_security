@@ -13,26 +13,40 @@ import java.util.*;
  */
 public class HttpRequest implements IRequest{
 
+    static final HttpResponse.ResponseConfig DEFAULT_RESO_CONFIG= HttpResponse.ResponseConfig.creat().readCookie(false);
+
     static final String LINE="\r\n";
     protected String method="GET";
     protected Map<String,String> headers;
     private byte[] postData=null;
     protected URL url;
+    private Proxy proxy;
+    private int port=-1;
 
     private HttpResponse.ResponseConfig responseConfig;
 
     public HttpRequest(URL url) {
         this.url=url;
         String protocol= url.getProtocol();
-        if("http".equals(protocol) || "https".equals(protocol)){
-
-        }else {
+        if(! "http".equals(protocol) && !"https".equals(protocol)){
             throw new RuntimeException("Unsupport "+protocol+"  protocol ! ");
         }
     }
 
     public String getPathSegment() {
-        return "".equals(url.getPath())?"/":url.getPath();
+        String ret="";
+        String s= url.toString();
+        int pIdx= s.indexOf("//");
+        if(pIdx != -1){
+            pIdx=pIdx+2;
+            try{
+                ret=s.substring(s.indexOf("/",pIdx));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        return "".equals(ret)?"/":ret;
     }
 
 
@@ -49,6 +63,14 @@ public class HttpRequest implements IRequest{
         this.method="POST";
         this.postData=postData;
         return this;
+    }
+
+    public Proxy getProxy() {
+        return proxy;
+    }
+
+    public void setProxy(Proxy proxy) {
+        this.proxy = proxy;
     }
 
     public HttpRequest post(Map<String,String> data){
@@ -85,8 +107,14 @@ public class HttpRequest implements IRequest{
     }
 
     public int getPort() {
-        int port= url.getPort();
-        return port==-1?url.getDefaultPort():port;
+        if(port != -1){
+            return port;
+        }
+
+        int p = url.getPort();
+        port= (p==-1?url.getDefaultPort():p);
+
+        return port;
     }
 
     public Map<String, String> getHeaders() {
@@ -124,8 +152,11 @@ public class HttpRequest implements IRequest{
         headers.put("Cookie",sb.toString());
     }
 
-    protected String getHeaderHost(){
-        return getHost()+":"+getPort();
+    public String getHeaderHost(){
+        int p= getPort();
+        boolean appendPort=(p!=80 && p != 443);
+        //特殊端口才加端口号
+        return getHost()+(appendPort?p:"");
     }
 
     public byte[] asByte(){
@@ -165,11 +196,14 @@ public class HttpRequest implements IRequest{
         }
 
         sb.append(LINE);
+
+        System.out.println(sb);
+
         return sb.toString();
     }
 
     public HttpResponse.ResponseConfig getResponseConfig() {
-        return responseConfig;
+        return responseConfig!=null?responseConfig:DEFAULT_RESO_CONFIG;
     }
 
     public void setResponseConfig(HttpResponse.ResponseConfig responseConfig) {
