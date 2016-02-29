@@ -52,7 +52,7 @@ public class IPSeeker {
     private static final String ip_filename = "/Users/zl/qqwry.dat";
 
     private static void error(String s) {
-        System.err.println(s);
+        //System.err.println(s);
     }
 
     /**
@@ -137,7 +137,7 @@ public class IPSeeker {
 
         int i=0;
         for (int offset = ipBegin + 4; offset <= endOffset; offset += IP_RECORD_LENGTH) {
-            if(i >limit){
+            if(limit> 0 && i >limit){
                 break;
             }
             int temp = readInt3(offset);
@@ -161,10 +161,13 @@ public class IPSeeker {
 
                     ret.add(entry);
 
-                    i++;
+
                 }
+
             }
+            i++;
         }
+        System.out.println("  " +i);
         return ret;
     }
 
@@ -172,7 +175,11 @@ public class IPSeeker {
      * 根据地点查ip区间
      */
     public List<IPEntry> getIPEntries(String country,String area) {
-        return getIPEntries(country,area,100);
+        return getIPEntries(country,area,-1);
+    }
+
+    public List<IPEntry> getIPEntries(String country) {
+        return getIPEntries(country,null,-1);
     }
 
     /**

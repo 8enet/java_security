@@ -2,7 +2,6 @@ package com.javademo.proxy;
 
 import com.lambdaworks.redis.*;
 import com.lambdaworks.redis.pubsub.*;
-import redis.clients.jedis.Jedis;
 
 import java.util.concurrent.TimeUnit;
 
@@ -18,9 +17,9 @@ public class RedisMain {
         System.out.println(connection.get("aa"));
 
 
-        Jedis jedis = new Jedis("192.168.2.102", 6379);
-
-        System.out.println(jedis.get("aa"));
+//        Jedis jedis = new Jedis("192.168.2.102", 6379);
+//
+//        System.out.println(jedis.get("aa"));
 
     }
 
