@@ -1,20 +1,14 @@
 package com.javademo.qqwry;
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteOrder;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.StringTokenizer;
-
-
-import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.googlecode.concurrentlinkedhashmap.*;
 import org.apache.commons.lang3.time.*;
+
+import java.io.*;
+import java.lang.reflect.*;
+import java.nio.*;
+import java.nio.channels.*;
+import java.security.*;
+import java.util.*;
 
 /**
  * <pre>
@@ -49,10 +43,11 @@ public class IPSeeker {
 
     private final byte[] tmpB4;
 
-    private static final String ip_filename = "/Users/zl/qqwry.dat";
+    private File dbFile;
 
+    
     private static void error(String s) {
-        //System.err.println(s);
+        System.err.println(s);
     }
 
     /**
@@ -61,11 +56,26 @@ public class IPSeeker {
     private IPSeeker() {
         tmpBuf = new byte[512];
         tmpB4 = new byte[4];
+    }
 
+    public void load(File qqwry){
         try {
-            ipFile = new RandomAccessFile(ip_filename, "r");
-            // ipFile = new RandomAccessFile(ClassLoader.getSystemResource(
-            // ip_filename).getPath(), "r");
+            System.out.println("load "+qqwry);
+
+            if(dbFile != null){
+                close();
+
+                String path=dbFile.getAbsolutePath();
+                boolean s=dbFile.delete();
+
+                boolean s2=qqwry.renameTo(new File(path));
+
+                System.out.println(s+"   "+s2+"   "+dbFile);
+            }else {
+                dbFile=qqwry;
+            }
+
+            ipFile = new RandomAccessFile(dbFile, "r");
         } catch (IOException e) {
             error("IP地址信息文件没有找到，IP显示功能将无法使用");
             e.printStackTrace();
@@ -95,12 +105,42 @@ public class IPSeeker {
             long ipFileLen = ipFile.length();
             mbb = fc.map(FileChannel.MapMode.READ_ONLY, 0, ipFileLen);
             mbb.order(ByteOrder.LITTLE_ENDIAN);
-            ipFile.close();
 
             error("read ip file to memory, len = " + ipFileLen + " bytes");
         } catch (IOException e) {
             e.printStackTrace();
+        }finally {
+            try {
+                ipFile.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+    }
+
+
+    private void close(){
+        try{
+            AccessController.doPrivileged(new PrivilegedAction<Object>() {
+
+                @Override
+                public Object run() {
+                    try {
+                        Method getCleanerMethod = mbb.getClass().getMethod("cleaner");
+                        getCleanerMethod.setAccessible(true);
+                        sun.misc.Cleaner cleaner =(sun.misc.Cleaner)getCleanerMethod.invoke(mbb);
+                        cleaner.clean();
+                    } catch(Exception e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+            });
+
+        }catch (Throwable e){
+            e.printStackTrace();
+        }
+
     }
 
     public static IPSeeker getInstance() {
@@ -126,6 +166,8 @@ public class IPSeeker {
         }
         return loc;
     }
+
+
 
     /**
      * 根据地点查ip区间
