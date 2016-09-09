@@ -2,6 +2,9 @@ package com.javademo.tools;
 
 import org.apache.commons.codec.binary.Hex;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by zl on 16/3/8.
  */
@@ -54,6 +57,11 @@ public class Tinypinyin {
 
         System.out.println(Integer.toBinaryString(256));
 
+
+        Map<String,String> map=new HashMap<>();
+        map.put("aa",null);
+
+        System.out.println(map.get("aa"));
 
     }
 

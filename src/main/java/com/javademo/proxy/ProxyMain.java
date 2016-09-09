@@ -1,11 +1,13 @@
 package com.javademo.proxy;
 
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.BrowserMobProxyServer;
 import net.lightbody.bmp.filters.RequestFilter;
+import net.lightbody.bmp.filters.ResponseFilter;
 import net.lightbody.bmp.mitm.CertificateAndKeySource;
 import net.lightbody.bmp.mitm.CertificateInfo;
 import net.lightbody.bmp.mitm.PemFileCertificateSource;
@@ -13,15 +15,18 @@ import net.lightbody.bmp.mitm.RootCertificateGenerator;
 import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager;
 import net.lightbody.bmp.util.HttpMessageContents;
 import net.lightbody.bmp.util.HttpMessageInfo;
+import org.littleshoot.proxy.ChainedProxy;
+import org.littleshoot.proxy.ChainedProxyAdapter;
+import org.littleshoot.proxy.ChainedProxyManager;
+import org.littleshoot.proxy.HttpProxyServerBootstrap;
 
 import java.io.File;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 简单http/https 代理服务器
@@ -81,70 +86,129 @@ public class ProxyMain {
         //先生成证书，导入certificate.cer 文件到系统或浏览器，只要生成一次并导入即可
         //rootCertificateGenerator();
 
-        File cert= new File(ClassLoader.getSystemResource("certificate.cer").toURI());
-        File pem=new File(ClassLoader.getSystemResource("private-key.pem").toURI());
+//        File cert= new File(ClassLoader.getSystemResource("certificate.cer").toURI());
+//        File pem=new File(ClassLoader.getSystemResource("private-key.pem").toURI());
+//
+//        //然后将证书加载到
+//        CertificateAndKeySource existingCertificateSource=new PemFileCertificateSource(cert,pem, PASSWORD);
+//
+//        ImpersonatingMitmManager mitmManager = ImpersonatingMitmManager.builder()
+//                .rootCertificateSource(existingCertificateSource)
+//                .build();
 
-        //然后将证书加载到
-        CertificateAndKeySource existingCertificateSource=new PemFileCertificateSource(cert,pem, PASSWORD);
 
-        ImpersonatingMitmManager mitmManager = ImpersonatingMitmManager.builder()
-                .rootCertificateSource(existingCertificateSource)
-                .build();
+        BrowserMobProxyServer proxy = new BrowserMobProxyServer(PROXY_PORT);
+
+        //proxy.setMitmManager(mitmManager);
+
+        InetSocketAddress upstreamProxy = new InetSocketAddress("218.75.207.110",8090);
+        //upstreamProxy = InetSocketAddress.createUnresolved("127.0.0.1",8888);
+
+        final InetSocketAddress address=upstreamProxy;
+
+        final List<InetSocketAddress> addressList=new ArrayList<>();
+        //addressList.add(new InetSocketAddress("222.88.142.51",8000));
+        //addressList.add(new InetSocketAddress("218.75.207.110",8090));
+        addressList.add(new InetSocketAddress("103.227.128.243",3128));
+        addressList.add(new InetSocketAddress("125.39.67.194",3128));
 
 
-        BrowserMobProxy proxy = new BrowserMobProxyServer(PROXY_PORT);
+//        proxy.setChainedProxyManager(new ChainedProxyManager() {
+//            @Override
+//            public void lookupChainedProxies(HttpRequest httpRequest, Queue<ChainedProxy> chainedProxies) {
+//
+//                chainedProxies.add(new ChainedProxyAdapter(){
+//                    @Override
+//                    public InetSocketAddress getChainedProxyAddress() {
+//                        System.out.println("---"+address);
+//                        return address;
+//                    }
+//                });
+//
+//
+////                for (InetSocketAddress address1:addressList){
+////                    chainedProxies.add(new ChainedProxyAdapter(){
+////                        @Override
+////                        public InetSocketAddress getChainedProxyAddress() {
+////                            System.out.println("---"+address1);
+////                            return address1;
+////                        }
+////                    });
+////                }
+//
+//                //chainedProxies.add(ChainedProxyAdapter.FALLBACK_TO_DIRECT_CONNECTION);
+//
+//                System.out.println("lookupChainedProxies " + httpRequest.getUri() + "  " + chainedProxies);
+//
+//            }
+//        });
 
-        proxy.setMitmManager(mitmManager);
 
+//        proxy.addRequestFilter(new RequestFilter() {
+//            @Override
+//            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
+//
+//
+//                final HttpHeaders headers = request.headers();
+//                if(headers != null){
+//                    final String accept = headers.get("Accept");
+//                    if(accept != null && (accept.contains("application") )){
+//                        StringBuilder sb=new StringBuilder();
+//
+//                        sb.append(request.getUri());
+//                        sb.append("\n");
+//                        final List<Map.Entry<String, String>> entries = headers.entries();
+//                        for (Map.Entry<String, String> entry:entries){
+//                            System.out.println(entry.getKey()+":"+entry.getValue());
+//                            sb.append(entry.getKey()).append(':').append(entry.getValue()).append('\n');
+//                        }
+//                        //RedisQueueManager.getInstance().publish(sb);
+//                    }
+//                }
+//
+//                return null;
+//            }
+//        });
 
         proxy.addRequestFilter(new RequestFilter() {
             @Override
             public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
 
+
                 final HttpHeaders headers = request.headers();
                 if(headers != null){
-                    final String accept = headers.get("Accept");
-                    if(accept != null && (accept.contains("application") )){
-                        StringBuilder sb=new StringBuilder();
+                    headers.remove("Cookie");
 
-                        sb.append(request.getUri());
-                        sb.append("\n");
-                        final List<Map.Entry<String, String>> entries = headers.entries();
-                        for (Map.Entry<String, String> entry:entries){
-                            //System.out.println(entry.getKey()+":"+entry.getValue());
-                            sb.append(entry.getKey()).append(':').append(entry.getValue()).append('\n');
-                        }
-                        //RedisQueueManager.getInstance().publish(sb);
-                    }
                 }
+                System.out.println(request.getClass());
 
                 return null;
             }
         });
 
-//        proxy.addResponseFilter(new ResponseFilter() {
-//            @Override
-//            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-//
-//                //System.out.println(messageInfo.getOriginalUrl());
-//
-//                final HttpHeaders headers = response.headers();
-//
-//                if(contents.isText()){
-//
-//                    if(headers != null){
-//                        final List<Map.Entry<String, String>> entries = headers.entries();
-//                        for (Map.Entry<String, String> entry:entries){
-//                            System.out.println(entry.getKey()+":"+entry.getValue());
-//                        }
-//                    }
-//                    //System.out.println(contents.getTextContents());
-//                }
-//            }
-//        });
+        proxy.addResponseFilter(new ResponseFilter() {
+            @Override
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
+
+                //System.out.println(messageInfo.getOriginalUrl());
+
+                final HttpHeaders headers = response.headers();
+
+                if(contents.isText()){
+
+                    if(headers != null){
+                        final List<Map.Entry<String, String>> entries = headers.entries();
+                        for (Map.Entry<String, String> entry:entries){
+                            System.out.println(entry.getKey()+":"+entry.getValue());
+                        }
+                    }
+                    //System.out.println(contents.getTextContents());
+                }
+            }
+        });
 
         //二级代理
-        //proxy.setChainedProxy(new InetSocketAddress("127.0.0.1",8090));
+        //proxy.setChainedProxy(upstreamProxy);
 
 
         proxy.start();
